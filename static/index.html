@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="wasm_exec.js"></script>
+  </head>
+  <body>
+    <input type="file" />
+    <script>
+      const go = new Go();
+      WebAssembly.instantiateStreaming(
+        fetch("main.wasm"),
+        go.importObject
+      ).then(result => {
+        go.run(result.instance);
+      });
+
+      document.querySelector("input").addEventListener(
+        "change",
+        function() {
+          var reader = new FileReader();
+          reader.onload = function() {
+            var binary = "";
+						var bytes = new Uint8Array(reader.result);
+
+						// TODO: A single object output? { artwork: tags }; ?
+            const artwork = loadImage(bytes);
+            const tags = loadTags(bytes);
+
+            document.getElementById("artwork").src =
+              `data:${artwork.mime_type}};base64,` +
+              btoa(
+                String.fromCharCode.apply(null, new Uint8Array(artwork.data))
+							);
+
+						document.getElementById("output").innerText = JSON.stringify(loadTags(bytes));
+          };
+
+          reader.readAsArrayBuffer(this.files[0]);
+        },
+        false
+      );
+		</script>
+		<div style="display: flex;">
+			<p style="padding: 1rem;"><img id="artwork" /></p>
+			<p style="padding: 1rem;">
+				<textarea style="width: 13rem; height: 13rem;" id="output"></textarea>
+			</p>
+		</div>
+</body>
+</html>
