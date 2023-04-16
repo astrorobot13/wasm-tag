@@ -5,6 +5,13 @@
   </head>
   <body>
     <input type="file" />
+    <div style="display: flex;">
+      <p style="padding: 1rem;"><img id="artwork" /></p>
+      <p style="padding: 1rem;">
+        <textarea style="width: 13rem; height: 13rem;" id="output"></textarea>
+      </p>
+    </div>
+
     <script>
       const go = new Go();
       WebAssembly.instantiateStreaming(
@@ -20,9 +27,8 @@
           var reader = new FileReader();
           reader.onload = function() {
             var binary = "";
-						var bytes = new Uint8Array(reader.result);
+            var bytes = new Uint8Array(reader.result);
 
-						// TODO: A single object output? { artwork: tags }; ?
             const artwork = loadImage(bytes);
             const tags = loadTags(bytes);
 
@@ -30,21 +36,17 @@
               `data:${artwork.mime_type}};base64,` +
               btoa(
                 String.fromCharCode.apply(null, new Uint8Array(artwork.data))
-							);
+              );
 
-						document.getElementById("output").innerText = JSON.stringify(loadTags(bytes));
+            document.getElementById("output").innerText = JSON.stringify(
+              loadTags(bytes)
+            );
           };
 
           reader.readAsArrayBuffer(this.files[0]);
         },
         false
       );
-		</script>
-		<div style="display: flex;">
-			<p style="padding: 1rem;"><img id="artwork" /></p>
-			<p style="padding: 1rem;">
-				<textarea style="width: 13rem; height: 13rem;" id="output"></textarea>
-			</p>
-		</div>
-</body>
+    </script>
+  </body>
 </html>
