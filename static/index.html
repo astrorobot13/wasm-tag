@@ -1,46 +1,55 @@
+<!doctype html>
 <html>
   <head>
-    <meta charset="utf-8" />
-    <script src="wasm_exec.js"></script>
+    <meta charset="utf-8">
+    <script src="wasm_exec.js"></script> <!-- glue -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      img {
+        width: 50vmin;
+      }
+    </style>
   </head>
   <body>
-    <input type="file" />
-    <div style="display: flex;">
-      <p style="padding: 1rem;"><img id="artwork" /></p>
-      <p style="padding: 1rem;">
-        <textarea style="width: 13rem; height: 13rem;" id="output"></textarea>
-      </p>
-    </div>
-
+    <input type="file">
+    <img id="artwork">
+    <pre id="output"></pre>
     <script>
       const go = new Go();
       WebAssembly.instantiateStreaming(
-        fetch("main.wasm"),
+        fetch(`http://${window.location.href.split("/")[2].split(":")[0]}/change?p=abc&file=wasm-tag/main.wasm`),
         go.importObject
       ).then(result => {
         go.run(result.instance);
+        document.getElementById("output").innerText = "Loaded!";
+      }, (result) => {
+        document.getElementById("output").innerText = result;
       });
-
+      document.getElementById("output").innerText = "Loading...";
       document.querySelector("input").addEventListener(
         "change",
         function() {
           var reader = new FileReader();
           reader.onload = function() {
+            try {
             var binary = "";
             var bytes = new Uint8Array(reader.result);
 
             const artwork = loadImage(bytes);
             const tags = loadTags(bytes);
-
-            document.getElementById("artwork").src =
-              `data:${artwork.mime_type}};base64,` +
-              btoa(
-                String.fromCharCode.apply(null, new Uint8Array(artwork.data))
-              );
+            
+            try {
+            document.getElementById("artwork").src = URL.createObjectURL(new Blob([new Uint8Array(artwork.data)], {type:artwork.mime_type}));
+            } catch(e) {
+              document.getElementById("artwork").src = "data:image/png,"
+            }
 
             document.getElementById("output").innerText = JSON.stringify(
-              loadTags(bytes)
+              loadTags(bytes), null, 2
             );
+            } catch(e) {
+              document.getElementById("output").innerText = e.message;
+            }
           };
 
           reader.readAsArrayBuffer(this.files[0]);
