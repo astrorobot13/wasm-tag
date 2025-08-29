@@ -2,8 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="wasm_exec.js"></script> <!-- glue -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="wasm_exec.js"></script> <!-- glue -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <style>
       img {
         width: 50vmin;
@@ -12,50 +13,35 @@
   </head>
   <body>
     <input type="file">
-    <img id="artwork">
-    <pre id="output"></pre>
+    <img>
+    <pre></pre>
     <script>
       const go = new Go();
       WebAssembly.instantiateStreaming(
-        fetch(`/wasm-tag/main.wasm`),
+        fetch("main.wasm"),
         go.importObject
       ).then(result => {
         go.run(result.instance);
-        document.getElementById("output").innerText = "Loaded!";
+        $("pre").text("Loaded!");
       }, (result) => {
-        document.getElementById("output").innerText = result;
+        $("pre").text(result);
       });
-      document.getElementById("output").innerText = "Loading...";
-      document.querySelector("input").addEventListener(
-        "change",
-        function() {
-          var reader = new FileReader();
-          reader.onload = function() {
-            try {
-            var binary = "";
-            var bytes = new Uint8Array(reader.result);
-
+      $("pre").text("Loading...");
+      $("input").on("input", function() {
+        this.files[0].bytes().then((bytes) => {
+          try {
             const artwork = loadImage(bytes);
-            const tags = loadTags(bytes);
-            
             try {
-            document.getElementById("artwork").src = URL.createObjectURL(new Blob([new Uint8Array(artwork.data)], {type:artwork.mime_type}));
+              $("img")[0].src = URL.createObjectURL(new Blob([new Uint8Array(artwork.data)], {type:artwork.mime_type}));
             } catch(e) {
-              document.getElementById("artwork").src = "data:image/png,"
+              $("img")[0].src = "data:image/png,";
             }
-
-            document.getElementById("output").innerText = JSON.stringify(
-              loadTags(bytes), null, 2
-            );
-            } catch(e) {
-              document.getElementById("output").innerText = e.message;
-            }
-          };
-
-          reader.readAsArrayBuffer(this.files[0]);
-        },
-        false
-      );
+          $("pre").text(JSON.stringify(loadTags(bytes), null, 2));
+          } catch(e) {
+            $("pre").text(e.message);
+          }
+        });
+      });
     </script>
   </body>
 </html>
