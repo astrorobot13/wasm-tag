@@ -1,1 +1,1 @@
-This proect has been deprecated due to crashing when too many files are fed to it at once. Use something like <a href="https://github.com/aadsm/jsmediatags">aadsm/jsmediatags</a> instead.
+This proect has been deprecated and removed from pages due to crashing when too many files are fed to it at once. Use something like <a href="https://github.com/aadsm/jsmediatags">aadsm/jsmediatags</a> instead.
